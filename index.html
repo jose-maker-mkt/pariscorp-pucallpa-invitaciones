@@ -90,16 +90,4 @@ hr{border-top-color:var(--silver-line);margin:26px 0}
 </div></main><script>
 const dato = 'jueves 29 de octubre de 2026 · 6:00 p. m. · Oficinas corporativas ParisCorp · Av. Centenario con Jr. Fernando Stall 192, 3.er piso, Pucallpa';
 document.getElementById('datosGeneral').textContent = dato;
-document.getElementById('registroForm').addEventListener('submit', e => {
-  const form = e.currentTarget;
-  if (!form.checkValidity()) return;
-  const button = document.getElementById('btnGeneral');
-  button.disabled = true;
-  button.textContent = 'Registrando…';
-});
-window.addEventListener('pageshow', () => {
-  const button = document.getElementById('btnGeneral');
-  button.disabled = false;
-  button.textContent = 'Registrar mi asistencia';
-});
 </script></body></html>
