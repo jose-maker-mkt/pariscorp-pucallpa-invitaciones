@@ -36,7 +36,7 @@
     @media(min-width:481px){body{background:radial-gradient(circle at top,#184a99,#031335 70%)}.page{box-shadow:0 0 80px #0008}}
     @media(max-width:360px){.page{padding-left:14px;padding-right:14px}.card{padding:17px}.spacer{height:170px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-    [hidden]{display:none!important}.confirmacion h2{font-size:clamp(26px,7vw,34px);margin:16px 0;color:#fff}.confirmacion .helper{font-size:15px;color:#e7f5ff;margin:0 0 20px}.direccion{display:block;margin:22px 0 0;padding:15px 18px;text-align:center;border-radius:11px;background:linear-gradient(100deg,#e9f7ff,#99d4ff);color:#062764;font-size:15px;font-weight:850;text-decoration:none}#estadoRegistro{min-height:1.5em;color:#dcefff;font-size:12px;line-height:1.5}
+    [hidden]{display:none!important}.confirmacion h2{font-size:clamp(26px,7vw,34px);margin:16px 0;color:#fff}.confirmacion .helper{font-size:15px;color:#e7f5ff;margin:0 0 20px}.direccion{display:block;margin:22px 0 0;padding:15px 18px;text-align:center;border-radius:11px;background:linear-gradient(100deg,#e9f7ff,#99d4ff);color:#062764;font-size:15px;font-weight:850;text-decoration:none}#estadoRegistro{min-height:1.5em;color:#dcefff;font-size:12px;line-height:1.5}.cargando{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:#00143deb;backdrop-filter:blur(12px)}.cargando-card{width:min(100%,440px);padding:32px 26px;border:1px solid #a7d6ff77;border-radius:22px;background:#062e78ee;box-shadow:0 30px 80px #00103099;text-align:center;color:#fff}.cargando h2{margin:16px 0;font-size:clamp(25px,7vw,33px);line-height:1.15}.cargando p{color:#dcefff}.barra{height:12px;margin:26px 0 12px;overflow:hidden;border-radius:99px;background:#ffffff33}.barra span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#78baff,#fff);transition:width .5s ease}.cargando strong{display:block;font-size:26px}.cargando small{display:block;margin-top:10px;color:#c8e7ff}
   </style>
 </head>
 <body>
@@ -73,6 +73,15 @@
       <a class="direccion" href="https://maps.app.goo.gl/K1UFMFwTWDM5VVGr8" target="_blank" rel="noopener noreferrer">Ver dirección</a>
       <p class="contact">¡Nos vemos en Pucallpa!</p>
     </section>
+    <div class="cargando" id="cargando" role="dialog" aria-modal="true" aria-label="Procesando registro" hidden>
+      <div class="cargando-card"><span class="eyebrow">ParisCorp · Pucallpa</span>
+        <h2>Estamos registrando tu asistencia</h2>
+        <p>Espera mientras verificamos tus datos y la confirmación por correo.</p>
+        <div class="barra"><span id="barraProgreso"></span></div>
+        <strong id="porcentajeProgreso" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0 %</strong>
+        <small>Avance estimado. No cierres esta página.</small>
+      </div>
+    </div>
     <iframe name="respuestaParisCorp" title="Procesamiento del registro" hidden></iframe>
   </main>
 <script>
@@ -83,6 +92,17 @@ const aviso = document.getElementById('estadoRegistro');
 let pendiente = '';
 let espera;
 let consulta;
+let avance;
+let porcentaje = 0;
+const cargando = document.getElementById('cargando');
+const indicador = document.getElementById('porcentajeProgreso');
+
+function mostrarPorcentaje(valor) {
+  porcentaje = Math.max(porcentaje, valor);
+  indicador.textContent = porcentaje + ' %';
+  indicador.setAttribute('aria-valuenow', String(porcentaje));
+  document.getElementById('barraProgreso').style.width = porcentaje + '%';
+}
 
 function consultarEstado() {
   if (!pendiente) return;
@@ -99,20 +119,26 @@ function resolverRegistro(dato) {
   if (!pendiente || !dato || dato.tipo !== 'PARISCORP_REGISTRO_RESULTADO' || dato.nonce !== pendiente || dato.pendiente) return;
   clearTimeout(espera);
   clearTimeout(consulta);
+  clearInterval(avance);
   pendiente = '';
   if (!dato.ok) {
+    cargando.hidden = true;
     boton.disabled = false;
     aviso.textContent = dato.mensaje || 'No se pudo guardar el registro. Intenta nuevamente.';
     return;
   }
-  document.getElementById('formulario').hidden = true;
-  const confirmacion = document.getElementById('confirmacion');
-  confirmacion.hidden = false;
-  document.getElementById('mensajeConfirmacion').textContent = dato.correo === 'ENVIADO'
-    ? 'Tu registro está confirmado. Te enviamos un correo con los datos del evento.'
-    : 'Tu registro está confirmado. El correo está pendiente; no necesitas registrarte otra vez.';
-  window.scrollTo(0, 0);
-  confirmacion.focus();
+  mostrarPorcentaje(100);
+  setTimeout(() => {
+    cargando.hidden = true;
+    document.getElementById('formulario').hidden = true;
+    const confirmacion = document.getElementById('confirmacion');
+    confirmacion.hidden = false;
+    document.getElementById('mensajeConfirmacion').textContent = dato.correo === 'ENVIADO'
+      ? 'Tu registro está confirmado. Te enviamos un correo con los datos del evento.'
+      : 'Tu registro está confirmado. El correo está pendiente; no necesitas registrarte otra vez.';
+    window.scrollTo(0, 0);
+    confirmacion.focus();
+  }, 450);
 }
 
 window.pariscorpRegistroEstado = resolverRegistro;
@@ -127,6 +153,11 @@ formulario.addEventListener('submit', () => {
   pendiente = crearNonce();
   campoNonce.value = pendiente;
   boton.disabled = true;
+  porcentaje = 0;
+  mostrarPorcentaje(8);
+  cargando.hidden = false;
+  clearInterval(avance);
+  avance = setInterval(() => mostrarPorcentaje(Math.min(88, porcentaje + (porcentaje < 45 ? 4 : 1))), 800);
   aviso.textContent = 'Guardando tu registro…';
   clearTimeout(espera);
   clearTimeout(consulta);
@@ -135,6 +166,8 @@ formulario.addEventListener('submit', () => {
     if (!pendiente) return;
     pendiente = '';
     clearTimeout(consulta);
+    clearInterval(avance);
+    cargando.hidden = true;
     boton.disabled = false;
     aviso.textContent = 'No pudimos verificar el resultado. Antes de registrarte de nuevo, revisa tu correo o contacta a la organización.';
   }, 30000);
