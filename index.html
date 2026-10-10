@@ -82,35 +82,23 @@ const campoNonce = formulario.querySelector('input[name="nonce"]');
 const aviso = document.getElementById('estadoRegistro');
 let pendiente = '';
 let espera;
+let consulta;
 
-function crearNonce() {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+function consultarEstado() {
+  if (!pendiente) return;
+  const script = document.createElement('script');
+  script.src = 'https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec?accion=estado_registro&nonce=' + encodeURIComponent(pendiente) + '&v=' + Date.now();
+  script.async = true;
+  script.onload = () => script.remove();
+  script.onerror = () => script.remove();
+  document.head.appendChild(script);
+  consulta = setTimeout(consultarEstado, 2500);
 }
 
-formulario.addEventListener('submit', () => {
-  pendiente = crearNonce();
-  campoNonce.value = pendiente;
-  boton.disabled = true;
-  aviso.textContent = 'Guardando tu registro…';
+function resolverRegistro(dato) {
+  if (!pendiente || !dato || dato.tipo !== 'PARISCORP_REGISTRO_RESULTADO' || dato.nonce !== pendiente || dato.pendiente) return;
   clearTimeout(espera);
-  espera = setTimeout(() => {
-    if (!pendiente) return;
-    pendiente = '';
-    boton.disabled = false;
-    aviso.textContent = 'No pudimos verificar el resultado. Antes de registrarte de nuevo, revisa tu correo o contacta a la organización.';
-  }, 30000);
-});
-
-window.addEventListener('message', event => {
-  let origen;
-  try { origen = new URL(event.origin); } catch (_) { return; }
-  const host = origen.hostname;
-  if (origen.protocol !== 'https:' || !(host === 'script.google.com' || host === 'script.googleusercontent.com' || host.endsWith('.script.googleusercontent.com'))) return;
-  const dato = event.data;
-  if (!pendiente || !dato || dato.tipo !== 'PARISCORP_REGISTRO_RESULTADO' || dato.nonce !== pendiente) return;
-  clearTimeout(espera);
+  clearTimeout(consulta);
   pendiente = '';
   if (!dato.ok) {
     boton.disabled = false;
@@ -125,6 +113,40 @@ window.addEventListener('message', event => {
     : 'Tu registro está confirmado. El correo está pendiente; no necesitas registrarte otra vez.';
   window.scrollTo(0, 0);
   confirmacion.focus();
+}
+
+window.pariscorpRegistroEstado = resolverRegistro;
+
+function crearNonce() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+formulario.addEventListener('submit', () => {
+  pendiente = crearNonce();
+  campoNonce.value = pendiente;
+  boton.disabled = true;
+  aviso.textContent = 'Guardando tu registro…';
+  clearTimeout(espera);
+  clearTimeout(consulta);
+  consulta = setTimeout(consultarEstado, 1200);
+  espera = setTimeout(() => {
+    if (!pendiente) return;
+    pendiente = '';
+    clearTimeout(consulta);
+    boton.disabled = false;
+    aviso.textContent = 'No pudimos verificar el resultado. Antes de registrarte de nuevo, revisa tu correo o contacta a la organización.';
+  }, 30000);
+});
+
+window.addEventListener('message', event => {
+  let origen;
+  try { origen = new URL(event.origin); } catch (_) { return; }
+  const host = origen.hostname;
+  if (origen.protocol !== 'https:' || !(host === 'script.google.com' || host === 'script.googleusercontent.com' || host.endsWith('.script.googleusercontent.com'))) return;
+  const dato = event.data;
+  resolverRegistro(dato);
 });
 </script>
 </body>
