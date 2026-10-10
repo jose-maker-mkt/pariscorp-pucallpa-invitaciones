@@ -36,6 +36,7 @@
     @media(min-width:481px){body{background:radial-gradient(circle at top,#184a99,#031335 70%)}.page{box-shadow:0 0 80px #0008}}
     @media(max-width:360px){.page{padding-left:14px;padding-right:14px}.card{padding:17px}.spacer{height:170px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    [hidden]{display:none!important}.confirmacion h2{font-size:clamp(26px,7vw,34px);margin:16px 0;color:#fff}.confirmacion .helper{font-size:15px;color:#e7f5ff;margin:0 0 20px}.direccion{display:block;margin:22px 0 0;padding:15px 18px;text-align:center;border-radius:11px;background:linear-gradient(100deg,#e9f7ff,#99d4ff);color:#062764;font-size:15px;font-weight:850;text-decoration:none}#estadoRegistro{min-height:1.5em;color:#dcefff;font-size:12px;line-height:1.5}
   </style>
 </head>
 <body>
@@ -46,12 +47,13 @@
       <h1>Una nueva etapa comienza</h1>
       <p>Acompáñanos en la apertura de la primera oficina de ParisCorp en Pucallpa.</p>
     </header>
-    <section class="card" aria-label="Formulario de registro">
+    <section class="card" id="formulario" aria-label="Formulario de registro">
       <div class="details"><strong>Jueves 29 de octubre de 2026 · 6:00 p. m.</strong><span>Oficinas corporativas ParisCorp</span><span>Av. Centenario con Jr. Fernando Stall 192, 3.er piso, Pucallpa</span></div>
       <h2>Confirma tu participación</h2>
       <p class="helper">Completa tus datos para reservar tu lugar en este momento especial.</p>
-      <form autocomplete="on" method="post" action="https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec">
+      <form autocomplete="on" method="post" action="https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec" target="respuestaParisCorp">
         <input type="hidden" name="accion" value="registro_general">
+        <input type="hidden" name="nonce" value="">
         <label class="field" for="nombres">Nombres <input id="nombres" name="nombres" required maxlength="80" autocomplete="given-name" placeholder="Tus nombres"></label>
         <label class="field" for="apellidos">Apellidos <input id="apellidos" name="apellidos" required maxlength="80" autocomplete="family-name" placeholder="Tus apellidos"></label>
         <label class="field" for="whatsapp">Número de WhatsApp <input id="whatsapp" name="whatsapp" required inputmode="tel" autocomplete="tel" maxlength="22" placeholder="987 654 321"></label>
@@ -59,9 +61,71 @@
         <label class="field" for="ciudad">Ciudad (opcional) <input id="ciudad" name="ciudad" maxlength="60" autocomplete="address-level2" placeholder="Pucallpa"></label>
         <label class="check" for="consentimiento"><input id="consentimiento" name="consentimiento" value="SI" type="checkbox" required><span>Acepto el uso de mis datos para gestionar mi inscripción, asistencia y comunicaciones de este evento. Puedo consultar sobre mis datos con la organización.</span></label>
         <button type="submit">Registrar mi asistencia</button>
+        <div id="estadoRegistro" role="status" aria-live="polite"></div>
       </form>
       <p class="contact">Consultas sobre tus datos: <a href="mailto:jose.maker.mkt@gmail.com">jose.maker.mkt@gmail.com</a></p>
     </section>
+    <section class="card confirmacion" id="confirmacion" aria-label="Confirmación de registro" tabindex="-1" hidden>
+      <span class="eyebrow">ParisCorp · Pucallpa</span>
+      <h2>¡Tu asistencia está confirmada!</h2>
+      <p id="mensajeConfirmacion" class="helper">Gracias por acompañarnos en la inauguración de nuestra primera oficina.</p>
+      <div class="details"><strong>Jueves 29 de octubre de 2026 · 6:00 p. m.</strong><span>Oficinas corporativas ParisCorp</span><span>Av. Centenario con Jr. Fernando Stall 192, 3.er piso, Pucallpa</span></div>
+      <a class="direccion" href="https://maps.app.goo.gl/K1UFMFwTWDM5VVGr8" target="_blank" rel="noopener noreferrer">Ver dirección</a>
+      <p class="contact">¡Nos vemos en Pucallpa!</p>
+    </section>
+    <iframe name="respuestaParisCorp" title="Procesamiento del registro" hidden></iframe>
   </main>
+<script>
+const formulario = document.querySelector('form');
+const boton = formulario.querySelector('button[type="submit"]');
+const campoNonce = formulario.querySelector('input[name="nonce"]');
+const aviso = document.getElementById('estadoRegistro');
+let pendiente = '';
+let espera;
+
+function crearNonce() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+formulario.addEventListener('submit', () => {
+  pendiente = crearNonce();
+  campoNonce.value = pendiente;
+  boton.disabled = true;
+  aviso.textContent = 'Guardando tu registro…';
+  clearTimeout(espera);
+  espera = setTimeout(() => {
+    if (!pendiente) return;
+    pendiente = '';
+    boton.disabled = false;
+    aviso.textContent = 'No pudimos verificar el resultado. Antes de registrarte de nuevo, revisa tu correo o contacta a la organización.';
+  }, 30000);
+});
+
+window.addEventListener('message', event => {
+  let origen;
+  try { origen = new URL(event.origin); } catch (_) { return; }
+  const host = origen.hostname;
+  if (origen.protocol !== 'https:' || !(host === 'script.google.com' || host === 'script.googleusercontent.com' || host.endsWith('.script.googleusercontent.com'))) return;
+  const dato = event.data;
+  if (!pendiente || !dato || dato.tipo !== 'PARISCORP_REGISTRO_RESULTADO' || dato.nonce !== pendiente) return;
+  clearTimeout(espera);
+  pendiente = '';
+  if (!dato.ok) {
+    boton.disabled = false;
+    aviso.textContent = dato.mensaje || 'No se pudo guardar el registro. Intenta nuevamente.';
+    return;
+  }
+  document.getElementById('formulario').hidden = true;
+  const confirmacion = document.getElementById('confirmacion');
+  confirmacion.hidden = false;
+  document.getElementById('mensajeConfirmacion').textContent = dato.correo === 'ENVIADO'
+    ? 'Tu registro está confirmado. Te enviamos un correo con los datos del evento.'
+    : 'Tu registro está confirmado. El correo está pendiente; no necesitas registrarte otra vez.';
+  window.scrollTo(0, 0);
+  confirmacion.focus();
+});
+</script>
 </body>
 </html>
