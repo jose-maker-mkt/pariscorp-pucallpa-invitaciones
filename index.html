@@ -45,30 +45,32 @@
     <header class="intro">
       <span class="eyebrow">Inauguración · Pucallpa</span>
       <h1>Una nueva etapa comienza</h1>
-      <p>Acompáñanos en la apertura de la primera oficina de ParisCorp en Pucallpa.</p>
+      <p>Registro exclusivo para embajadores del Club de Diamantes 💎 en la apertura de la primera oficina de Pariscorp en Pucallpa.</p>
     </header>
     <section class="card" id="formulario" aria-label="Formulario de registro">
       <div class="details"><strong>Jueves 29 de octubre de 2026 · 6:00 p. m.</strong><span>Oficinas corporativas ParisCorp</span><span>Av. Centenario con Jr. Fernando Stall 192, 3.er piso, Pucallpa</span></div>
       <h2>Confirma tu participación</h2>
       <p class="helper">Completa tus datos para reservar tu lugar en este momento especial.</p>
       <form autocomplete="on" method="post" action="https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec" target="respuestaParisCorp">
-        <input type="hidden" name="accion" value="registro_general">
+        <input type="hidden" name="accion" value="registro_final">
         <input type="hidden" name="nonce" value="">
-        <label class="field" for="nombres">Nombres <input id="nombres" name="nombres" required maxlength="80" autocomplete="given-name" placeholder="Tus nombres"></label>
-        <label class="field" for="apellidos">Apellidos <input id="apellidos" name="apellidos" required maxlength="80" autocomplete="family-name" placeholder="Tus apellidos"></label>
-        <label class="field" for="whatsapp">Número de WhatsApp <input id="whatsapp" name="whatsapp" required inputmode="tel" autocomplete="tel" maxlength="22" placeholder="987 654 321"></label>
+        <label class="field" for="nombre">Nombre completo <input id="nombre" name="nombre" required maxlength="120" autocomplete="name" placeholder="Tus nombres y apellidos"></label>
+        <label class="field" for="dni">DNI <input id="dni" name="dni" required inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" autocomplete="off" placeholder="8 dígitos"></label>
         <label class="field" for="correo">Correo electrónico <input id="correo" name="correo" required type="email" autocomplete="email" maxlength="180" placeholder="tu@correo.com"></label>
+        <label class="field" for="patrocinador">Patrocinador <input id="patrocinador" name="patrocinador" required maxlength="120" placeholder="Nombre de tu patrocinador"></label>
         <label class="field" for="ciudad">Ciudad <input id="ciudad" name="ciudad" required maxlength="60" autocomplete="address-level2" placeholder="Pucallpa"></label>
+        <label class="field" for="rango">Rango <input id="rango" name="rango" required maxlength="80" placeholder="Tu rango actual"></label>
+        <label class="check" for="declaracion"><input id="declaracion" name="declaracion" value="SI" type="checkbox" required><span>Confirmo que soy embajador del Club de Diamantes 💎. El acceso es individual; no se permiten invitados ni prospectos.</span></label>
         <label class="check" for="consentimiento"><input id="consentimiento" name="consentimiento" value="SI" type="checkbox" required><span>Acepto el uso de mis datos para gestionar mi inscripción, asistencia y comunicaciones de este evento. Puedo consultar sobre mis datos con la organización.</span></label>
-        <button type="submit">Registrar mi asistencia</button>
+        <button type="submit" disabled>Registro final pendiente de apertura</button>
         <div id="estadoRegistro" role="status" aria-live="polite"></div>
       </form>
       <p class="contact">Consultas sobre tus datos: <a href="mailto:jose.maker.mkt@gmail.com">jose.maker.mkt@gmail.com</a></p>
     </section>
     <section class="card confirmacion" id="confirmacion" aria-label="Confirmación de registro" tabindex="-1" hidden>
       <span class="eyebrow">ParisCorp · Pucallpa</span>
-      <h2>¡Tu asistencia está confirmada!</h2>
-      <p id="mensajeConfirmacion" class="helper">Gracias por acompañarnos en la inauguración de nuestra primera oficina.</p>
+      <h2>Solicitud recibida</h2>
+      <p id="mensajeConfirmacion" class="helper">Validaremos tu pertenencia al Club de Diamantes. El QR se enviará por correo tras la aprobación.</p>
       <div class="details"><strong>Jueves 29 de octubre de 2026 · 6:00 p. m.</strong><span>Oficinas corporativas ParisCorp</span><span>Av. Centenario con Jr. Fernando Stall 192, 3.er piso, Pucallpa</span></div>
       <a class="direccion" href="https://maps.app.goo.gl/K1UFMFwTWDM5VVGr8" target="_blank" rel="noopener noreferrer">Ver dirección</a>
       <p class="contact">¡Nos vemos en Pucallpa!</p>
@@ -133,9 +135,7 @@ function resolverRegistro(dato) {
     document.getElementById('formulario').hidden = true;
     const confirmacion = document.getElementById('confirmacion');
     confirmacion.hidden = false;
-    document.getElementById('mensajeConfirmacion').textContent = dato.correo === 'ENVIADO'
-      ? 'Tu registro está confirmado. Te enviamos un correo con los datos del evento.'
-      : 'Tu registro está confirmado. El correo está pendiente; no necesitas registrarte otra vez.';
+    document.getElementById('mensajeConfirmacion').textContent = dato.mensaje;
     window.scrollTo(0, 0);
     confirmacion.focus();
   }, 450);
@@ -184,3 +184,4 @@ window.addEventListener('message', event => {
 </script>
 </body>
 </html>
+
