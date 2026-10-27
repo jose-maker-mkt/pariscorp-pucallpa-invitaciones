@@ -62,7 +62,7 @@
         <label class="field" for="rango">Rango <input id="rango" name="rango" required maxlength="80" placeholder="Tu rango actual"></label>
         <label class="check" for="declaracion"><input id="declaracion" name="declaracion" value="SI" type="checkbox" required><span>Confirmo que soy embajador del Club de Diamantes 💎. El acceso es individual; no se permiten invitados ni prospectos.</span></label>
         <label class="check" for="consentimiento"><input id="consentimiento" name="consentimiento" value="SI" type="checkbox" required><span>Acepto el uso de mis datos para gestionar mi inscripción, asistencia y comunicaciones de este evento. Puedo consultar sobre mis datos con la organización.</span></label>
-        <button type="submit" disabled>Registro final pendiente de apertura</button>
+        <button type="submit">Enviar solicitud de registro</button>
         <div id="estadoRegistro" role="status" aria-live="polite"></div>
       </form>
       <p class="contact">Consultas sobre tus datos: <a href="mailto:jose.maker.mkt@gmail.com">jose.maker.mkt@gmail.com</a></p>
@@ -77,8 +77,8 @@
     </section>
     <div class="cargando" id="cargando" role="dialog" aria-modal="true" aria-label="Procesando registro" hidden>
       <div class="cargando-card"><span class="eyebrow">ParisCorp · Pucallpa</span>
-        <h2>Estamos registrando tu asistencia</h2>
-        <p>Espera mientras verificamos tus datos y la confirmación por correo.</p>
+        <h2>Estamos enviando tu solicitud</h2>
+        <p>Espera mientras verificamos y guardamos tus datos.</p>
         <div class="barra"><span id="barraProgreso"></span></div>
         <strong id="porcentajeProgreso" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0 %</strong>
         <small>Avance estimado. No cierres esta página.</small>
