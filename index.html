@@ -57,8 +57,9 @@
         <label class="field" for="nombre">Nombre completo <input id="nombre" name="nombre" required maxlength="120" autocomplete="name" placeholder="Tus nombres y apellidos"></label>
         <label class="field" for="dni">DNI <input id="dni" name="dni" required inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" autocomplete="off" placeholder="8 dígitos"></label>
         <label class="field" for="correo">Correo electrónico <input id="correo" name="correo" required type="email" autocomplete="email" maxlength="180" placeholder="tu@correo.com"></label>
-        <label class="field" for="patrocinador">Patrocinador <input id="patrocinador" name="patrocinador" required maxlength="120" placeholder="Nombre de tu patrocinador"></label>
-        <label class="field" for="ciudad">Ciudad <input id="ciudad" name="ciudad" required maxlength="60" autocomplete="address-level2" placeholder="Pucallpa"></label>
+        <label class="field" for="patrocinador">Patrocinador <input id="patrocinador" name="patrocinador" required maxlength="120" placeholder="Nombre y apellido de tu patrocinador"></label>
+        <label class="field" for="ciudad">Ciudad <input id="ciudad" name="ciudad" list="ciudades" required maxlength="60" autocomplete="address-level2" placeholder="Selecciona o escribe tu ciudad"></label>
+        <datalist id="ciudades"><option value="Pucallpa"><option value="Lima"><option value="Chimbote"><option value="Cusco"><option value="Tingo María"><option value="Yarinacocha"><option value="Callería"><option value="Manantay"><option value="Surco"></datalist>
         <label class="field" for="rango">Rango <input id="rango" name="rango" required maxlength="80" placeholder="Tu rango actual"></label>
         <label class="check" for="declaracion"><input id="declaracion" name="declaracion" value="SI" type="checkbox" required><span>Confirmo que soy embajador del Club de Diamantes 💎. El acceso es individual; no se permiten invitados ni prospectos.</span></label>
         <label class="check" for="consentimiento"><input id="consentimiento" name="consentimiento" value="SI" type="checkbox" required><span>Acepto el uso de mis datos para gestionar mi inscripción, asistencia y comunicaciones de este evento. Puedo consultar sobre mis datos con la organización.</span></label>
