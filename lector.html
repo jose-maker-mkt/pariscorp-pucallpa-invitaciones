@@ -17,36 +17,31 @@
     button{min-height:48px;padding:10px 16px;border:0;border-radius:11px;background:linear-gradient(100deg,#eaf8ff,#96d5ff);color:#05245f;font:inherit;font-weight:800;cursor:pointer}button.secondary{background:#133f80;color:#fff;border:1px solid #72b9f5}button:disabled{opacity:.5;cursor:wait}
     .actions{display:flex;gap:9px;flex-wrap:wrap}.actions button{flex:1}#reader{min-height:185px;overflow:hidden;border:1px solid #71bbff88;border-radius:14px;background:#001736}#reader video{border-radius:12px}#reader img{max-width:100%}
     .file{display:inline-block;margin-top:10px;color:#c8e8ff;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:13px}.file input{display:none}
-    .status{margin:14px 0 0;min-height:1.5em;color:#d7ecff;font-size:14px;line-height:1.45}#resultado{padding:20px;text-align:center}#resultado.ok{background:#065446;border-color:#50ecb1}#resultado.no{background:#5e1b36;border-color:#ff92b0}#resultado h2{font-size:clamp(26px,7vw,34px);margin:0 0 8px}#resultado strong{display:block;font-size:19px;margin:8px 0}#resultado p{margin:8px 0 0;line-height:1.45}
+    .status{margin:14px 0 0;min-height:1.5em;color:#d7ecff;font-size:14px;line-height:1.45}#resultado{padding:20px;text-align:center}#resultado.ok{background:#065446;border-color:#50ecb1}#resultado.ya{background:#614216;border-color:#ffd27a}#resultado.no{background:#5e1b36;border-color:#ff92b0}#resultado h2{font-size:clamp(26px,7vw,34px);margin:0 0 8px}#resultado strong{display:block;font-size:19px;margin:8px 0}#resultado p{margin:8px 0 0;line-height:1.45}#resultado-dni{font-size:19px;font-weight:800;letter-spacing:.08em;color:#fff}details{margin-top:16px}summary{color:#c8e8ff;cursor:pointer;font-size:13px}details button{width:100%}
     .fine{color:#b4d2f2;font-size:11px;line-height:1.5;text-align:center;margin:17px 6px}a{color:#c8e9ff}[hidden]{display:none!important}
   </style>
   <script src="./vendor/html5-qrcode.min.js" defer></script>
 </head>
 <body>
 <main>
-  <header><b>PARISCORP</b><small>PUCALLPA · CONTROL DE ACCESO</small><h1>Verificar entrada</h1><p>Escanea el QR y coteja el DNI físico antes de permitir el ingreso.</p></header>
+  <header><b>PARISCORP</b><small>PUCALLPA · CONTROL DE ACCESO</small><h1>Escanear entrada</h1><p>El QR registra el ingreso automáticamente. Compara el nombre y DNI mostrados con la entrada y el documento físico.</p></header>
   <section class="card" aria-labelledby="titulo-escaner">
-    <h2 id="titulo-escaner">1 · Leer el QR</h2>
+    <h2 id="titulo-escaner">Apunta la cámara al QR</h2>
     <div id="reader" aria-label="Vista de la cámara para escanear QR"></div>
-    <p class="hint">La cámara requiere permiso en este dispositivo. Si la entrada está en el mismo teléfono, usa una imagen de la entrada.</p>
+    <p class="hint">El resultado aparecerá aquí sin escribir el DNI ni pulsar otro botón. Si la entrada está en este teléfono, selecciona una imagen.</p>
     <div class="actions"><button type="button" id="iniciar">Iniciar cámara</button><button type="button" id="detener" class="secondary" disabled>Detener</button></div>
     <label class="file">Leer QR desde una imagen<input id="archivo" type="file" accept="image/*"></label>
-    <label for="token">Código leído o pegado manualmente<input id="token" name="token" autocapitalize="off" autocomplete="off" spellcheck="false" inputmode="text" maxlength="64" placeholder="El código aparecerá aquí"></label>
-    <p id="qr-ok" class="status" role="status" hidden>✓ QR leído. Ahora escribe el DNI y pulsa «Validar y registrar ingreso».</p>
-  </section>
-  <section class="card" aria-labelledby="titulo-verificar">
-    <h2 id="titulo-verificar">2 · Comprobar el DNI</h2>
-    <p class="hint">Compara el documento físico con el DNI impreso en la entrada. El sistema también verificará que corresponda a ese QR.</p>
-    <form id="validar" method="post" action="https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec" target="respuestaLector">
-      <input type="hidden" name="accion" value="ingreso_lector"><input type="hidden" name="nonce" id="nonce">
-      <input type="hidden" name="token" id="token-envio">
-      <label for="dni">DNI físico de la persona<input id="dni" name="dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" required placeholder="8 dígitos"></label>
-      <button id="validar-boton" type="submit" style="width:100%">Validar y registrar ingreso</button>
-    </form>
+    <details><summary>Ingresar un código manualmente</summary>
+      <label for="token">Código de la entrada<input id="token" autocapitalize="off" autocomplete="off" spellcheck="false" maxlength="64" placeholder="64 caracteres del QR"></label>
+      <button id="manual" type="button">Registrar código</button>
+    </details>
     <p id="estado" class="status" role="status" aria-live="polite"></p>
   </section>
-  <section id="resultado" class="card" role="status" aria-live="assertive" hidden><h2 id="resultado-titulo"></h2><strong id="resultado-nombre"></strong><p id="resultado-mensaje"></p><button id="siguiente" type="button" style="margin-top:18px">Escanear siguiente entrada</button></section>
-  <p class="fine">El lector es público. Solo un QR aprobado con el DNI correspondiente puede registrar un ingreso, y cada entrada se usa una sola vez.</p>
+  <form id="validar" method="post" action="https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec" target="respuestaLector" hidden>
+    <input type="hidden" name="accion" value="ingreso_lector"><input type="hidden" name="nonce" id="nonce"><input type="hidden" name="token" id="token-envio">
+  </form>
+  <section id="resultado" class="card" role="status" aria-live="assertive" hidden><h2 id="resultado-titulo"></h2><strong id="resultado-nombre"></strong><p id="resultado-dni"></p><p id="resultado-mensaje"></p><button id="siguiente" type="button" style="margin-top:18px">Escanear siguiente entrada</button></section>
+  <p class="fine">Cada QR aprobado registra un solo ingreso. Si ya se utilizó, el lector lo indicará en pantalla.</p>
   <iframe name="respuestaLector" id="respuestaLector" title="Resultado de validación" hidden></iframe>
 </main>
 <script>
@@ -57,32 +52,35 @@
   let lector=null,camaraActiva=false,ocupado=false,nonceActual='',intentos=0,temporizador=0;
   const estado=(texto)=>{$('estado').textContent=texto};
   function codigoValido(valor){return /^[a-f0-9]{64}$/i.test(String(valor||'').trim())}
-  function leido(valor){const token=String(valor||'').trim().toLowerCase();
+  function leido(valor){if(ocupado||!$('resultado').hidden)return;
+    const token=String(valor||'').trim().toLowerCase();
     if(!codigoValido(token)){estado('Este QR no corresponde a una entrada válida de PARISCORP.');return}
-    $('token').value=token;$('qr-ok').hidden=false;
-    estado('QR leído. Falta comprobar el DNI físico y pulsar «Validar y registrar ingreso».');
-    if(camaraActiva)setTimeout(detener,0);
-    $('dni').scrollIntoView({behavior:'smooth',block:'center'});
-    $('dni').focus();
+    $('token').value=token;$('token-envio').value=token;
+    $('validar').requestSubmit();
+    if(camaraActiva)void detener();
   }
-  async function detener(){if(lector&&camaraActiva){try{await lector.stop()}catch(e){}camaraActiva=false}
+  async function detener(){if(lector){if(camaraActiva){try{await lector.stop()}catch(e){}}
+      try{await lector.clear()}catch(e){}lector=null}camaraActiva=false;
     $('iniciar').disabled=false;$('detener').disabled=true;}
-  async function iniciar(){if(camaraActiva)return;
+  async function iniciar(){if(camaraActiva||ocupado)return;
     if(!window.Html5Qrcode){estado('No se pudo cargar el lector. Comprueba tu conexión o usa una imagen.');return}
+    if(lector)await detener();
     $('iniciar').disabled=true;estado('Solicitando acceso a la cámara…');
     try{lector=new Html5Qrcode('reader',{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],verbose:false});
       await lector.start({facingMode:'environment'},{fps:10,qrbox:{width:240,height:240}},leido,()=>{});
-      camaraActiva=true;$('detener').disabled=false;estado('Cámara activa. Acerca el QR al recuadro.');
+      camaraActiva=true;if(ocupado){await detener();return}
+      $('detener').disabled=false;estado('Cámara activa. Acerca el QR al recuadro.');
     }catch(e){$('iniciar').disabled=false;estado('No se pudo abrir la cámara. Revisa el permiso del navegador o selecciona una imagen.')}}
   async function imagen(file){if(!file)return;if(!window.Html5Qrcode){estado('El lector aún no se cargó.');return}
     await detener();lector=new Html5Qrcode('reader',{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],verbose:false});
     try{estado('Leyendo la imagen…');leido(await lector.scanFile(file,true))}catch(e){estado('No se encontró un QR legible en esta imagen.')}}
   function terminar(data){if(!ocupado||data.nonce!==nonceActual)return;
-    ocupado=false;clearTimeout(temporizador);$('validar-boton').disabled=false;
+    ocupado=false;clearTimeout(temporizador);$('manual').disabled=false;
     const correcto=data.ok===true&&data.estado==='AUTORIZADO';
-    $('resultado').hidden=false;$('resultado').className='card '+(correcto?'ok':'no');
-    $('resultado-titulo').textContent=correcto?'✓ INGRESO AUTORIZADO':data.estado==='YA_INGRESO'?'⚠ ENTRADA YA UTILIZADA':'✕ NO PERMITIR INGRESO';
-    $('resultado-nombre').textContent=data.nombre||'';$('resultado-mensaje').textContent=data.mensaje||'Consulta con coordinación.';
+    $('resultado').hidden=false;$('resultado').className='card '+(correcto?'ok':data.estado==='YA_INGRESO'?'ya':'no');
+    $('resultado-titulo').textContent=correcto?'✓ INGRESO REGISTRADO':data.estado==='YA_INGRESO'?'⚠ ENTRADA YA REGISTRADA':'✕ NO PERMITIR INGRESO';
+    $('resultado-nombre').textContent=data.nombre||'';$('resultado-dni').textContent=data.dni?'DNI: '+data.dni:'';
+    $('resultado-mensaje').textContent=data.mensaje||'Consulta con coordinación.';
     estado(correcto?'Ingreso registrado en la hoja.':'No se registró un nuevo ingreso.');
     $('resultado').scrollIntoView({behavior:'smooth',block:'start'});
   }
@@ -90,24 +88,23 @@
   window.addEventListener('message',e=>{if(e.origin!=='https://script.google.com'&&
     !/^https:\/\/(?:[a-z0-9-]+\.)?googleusercontent\.com$/.test(e.origin))return;
     const d=e.data;if(d&&d.tipo==='PARISCORP_LECTOR_RESULTADO')terminar(d)});
-  function consultar(){if(!ocupado)return;if(++intentos>15){ocupado=false;$('validar-boton').disabled=false;
-      estado('No llegó la respuesta del servidor. Revisa la hoja antes de repetir la validación.');return}
+  function consultar(){if(!ocupado)return;if(++intentos>15){ocupado=false;$('manual').disabled=false;
+      estado('No llegó la respuesta del servidor. Revisa la hoja antes de repetir el escaneo.');return}
     const s=document.createElement('script');s.src=ENDPOINT+'?accion=estado_lector&nonce='+nonceActual+'&t='+Date.now();
     s.onload=()=>s.remove();s.onerror=()=>s.remove();document.head.appendChild(s);
     temporizador=setTimeout(consultar,1500);
   }
   $('validar').addEventListener('submit',e=>{
     if(ocupado){e.preventDefault();return}
-    const token=$('token').value.trim().toLowerCase(),dni=$('dni').value.trim();
-    if(!codigoValido(token)||!/^\d{8}$/.test(dni)){
-      e.preventDefault();estado('Completa un QR válido y el DNI de 8 dígitos.');return}
-    nonceActual=crypto.randomUUID().replace(/-/g,'');$('nonce').value=nonceActual;$('token-envio').value=token;
-    ocupado=true;intentos=0;$('resultado').hidden=true;$('validar-boton').disabled=true;
-    estado('Verificando el QR y registrando el ingreso…');temporizador=setTimeout(consultar,1500);
+    const token=$('token-envio').value.trim().toLowerCase();
+    if(!codigoValido(token)){e.preventDefault();estado('Necesitamos un QR válido.');return}
+    nonceActual=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join('');
+    $('nonce').value=nonceActual;ocupado=true;intentos=0;$('resultado').hidden=true;$('manual').disabled=true;
+    estado('QR leído. Registrando el ingreso…');temporizador=setTimeout(consultar,1500);
   });
-  $('siguiente').addEventListener('click',()=>{$('resultado').hidden=true;$('token').value='';$('dni').value='';$('qr-ok').hidden=true;
-    $('archivo').value='';estado('Listo para escanear otra entrada.');
-    window.scrollTo({top:0,behavior:'smooth'})});
+  $('siguiente').addEventListener('click',()=>{$('resultado').hidden=true;$('token').value='';$('token-envio').value='';
+    $('archivo').value='';estado('Listo para escanear otra entrada.');window.scrollTo({top:0,behavior:'smooth'});void iniciar()});
+  $('manual').addEventListener('click',()=>leido($('token').value));
   $('iniciar').onclick=iniciar;$('detener').onclick=detener;$('archivo').onchange=e=>imagen(e.target.files[0]);
 })();
 </script>
