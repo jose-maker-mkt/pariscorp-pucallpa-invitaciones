@@ -88,8 +88,7 @@
   }
   window.pariscorpLectorEstado=function(data){if(data&&data.tipo==='PARISCORP_LECTOR_RESULTADO'&&!data.pendiente)terminar(data)};
   window.addEventListener('message',e=>{if(e.origin!=='https://script.google.com'&&
-    !/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(e.origin))return;
-    if(e.source!==$('respuestaLector').contentWindow)return;
+    !/^https:\/\/(?:[a-z0-9-]+\.)?googleusercontent\.com$/.test(e.origin))return;
     const d=e.data;if(d&&d.tipo==='PARISCORP_LECTOR_RESULTADO')terminar(d)});
   function consultar(){if(!ocupado)return;if(++intentos>15){ocupado=false;$('validar-boton').disabled=false;
       estado('No llegó la respuesta del servidor. Revisa la hoja antes de repetir la validación.');return}
