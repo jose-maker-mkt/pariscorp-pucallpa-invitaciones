@@ -17,7 +17,7 @@
     button{min-height:48px;padding:10px 16px;border:0;border-radius:11px;background:linear-gradient(100deg,#eaf8ff,#96d5ff);color:#05245f;font:inherit;font-weight:800;cursor:pointer}button.secondary{background:#133f80;color:#fff;border:1px solid #72b9f5}button:disabled{opacity:.5;cursor:wait}
     .actions{display:flex;gap:9px;flex-wrap:wrap}.actions button{flex:1}#reader{min-height:185px;overflow:hidden;border:1px solid #71bbff88;border-radius:14px;background:#001736}#reader video{border-radius:12px}#reader img{max-width:100%}
     .file{display:inline-block;margin-top:10px;color:#c8e8ff;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:13px}.file input{display:none}
-    .status{margin:14px 0 0;min-height:1.5em;color:#d7ecff;font-size:14px;line-height:1.45}#resultado{padding:20px;text-align:center}#resultado.ok{background:#065446;border-color:#50ecb1}#resultado.ya{background:#614216;border-color:#ffd27a}#resultado.no{background:#5e1b36;border-color:#ff92b0}#resultado h2{font-size:clamp(26px,7vw,34px);margin:0 0 8px}#resultado strong{display:block;font-size:19px;margin:8px 0}#resultado p{margin:8px 0 0;line-height:1.45}#resultado-dni{font-size:19px;font-weight:800;letter-spacing:.08em;color:#fff}details{margin-top:16px}summary{color:#c8e8ff;cursor:pointer;font-size:13px}details button{width:100%}
+    .status{margin:14px 0 0;min-height:1.5em;color:#d7ecff;font-size:14px;line-height:1.45}.velo{position:fixed;z-index:19;inset:0;background:#00102bba;backdrop-filter:blur(6px)}body.modal-abierto{overflow:hidden}#resultado{position:fixed;z-index:20;top:50%;left:50%;width:min(480px,calc(100% - 32px));max-height:calc(100svh - 32px);overflow:auto;transform:translate(-50%,-50%);margin:0;padding:24px;text-align:center;box-shadow:0 24px 75px #0009}#resultado.ok{background:#065446;border-color:#50ecb1}#resultado.ya{background:#614216;border-color:#ffd27a}#resultado.no{background:#5e1b36;border-color:#ff92b0}#resultado h2{font-size:clamp(26px,7vw,34px);margin:0 0 8px}#resultado strong{display:block;font-size:19px;margin:8px 0}#resultado p{margin:8px 0 0;line-height:1.45}#resultado-dni{font-size:19px;font-weight:800;letter-spacing:.08em;color:#fff}#resultado .cierre{font-size:12px;color:#d6eaff;margin-top:14px}details{margin-top:16px}summary{color:#c8e8ff;cursor:pointer;font-size:13px}details button{width:100%}
     .fine{color:#b4d2f2;font-size:11px;line-height:1.5;text-align:center;margin:17px 6px}a{color:#c8e9ff}[hidden]{display:none!important}
   </style>
   <script src="./vendor/html5-qrcode.min.js" defer></script>
@@ -40,7 +40,8 @@
   <form id="validar" method="post" action="https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec" target="respuestaLector" hidden>
     <input type="hidden" name="accion" value="ingreso_lector"><input type="hidden" name="nonce" id="nonce"><input type="hidden" name="token" id="token-envio">
   </form>
-  <section id="resultado" class="card" role="status" aria-live="assertive" hidden><h2 id="resultado-titulo"></h2><strong id="resultado-nombre"></strong><p id="resultado-dni"></p><p id="resultado-mensaje"></p><button id="siguiente" type="button" style="margin-top:18px">Escanear siguiente entrada</button></section>
+  <div id="velo" class="velo" hidden></div>
+  <section id="resultado" class="card" role="dialog" aria-modal="true" aria-live="assertive" aria-labelledby="resultado-titulo" hidden><h2 id="resultado-titulo"></h2><strong id="resultado-nombre"></strong><p id="resultado-dni"></p><p id="resultado-mensaje"></p><button id="siguiente" type="button" style="margin-top:18px">Nuevo escaneo</button><p class="cierre">Esta ventana se cerrará automáticamente en un minuto.</p></section>
   <p class="fine">Cada QR aprobado registra un solo ingreso. Si ya se utilizó, el lector lo indicará en pantalla.</p>
   <iframe name="respuestaLector" id="respuestaLector" title="Resultado de validación" hidden></iframe>
 </main>
@@ -49,7 +50,7 @@
   'use strict';
   const ENDPOINT='https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec';
   const $=id=>document.getElementById(id);
-  let lector=null,camaraActiva=false,ocupado=false,nonceActual='',intentos=0,temporizador=0;
+  let lector=null,camaraActiva=false,ocupado=false,nonceActual='',intentos=0,temporizador=0,temporizadorResultado=0;
   const estado=(texto)=>{$('estado').textContent=texto};
   function codigoValido(valor){return /^[a-f0-9]{64}$/i.test(String(valor||'').trim())}
   function leido(valor){if(ocupado||!$('resultado').hidden)return;
@@ -74,6 +75,10 @@
   async function imagen(file){if(!file)return;if(!window.Html5Qrcode){estado('El lector aún no se cargó.');return}
     await detener();lector=new Html5Qrcode('reader',{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],verbose:false});
     try{estado('Leyendo la imagen…');leido(await lector.scanFile(file,true))}catch(e){estado('No se encontró un QR legible en esta imagen.')}}
+  function nuevoEscaneo(){clearTimeout(temporizadorResultado);temporizadorResultado=0;
+    $('resultado').hidden=true;$('velo').hidden=true;document.body.classList.remove('modal-abierto');
+    $('token').value='';$('token-envio').value='';$('archivo').value='';nonceActual='';
+    estado('Listo para escanear otra entrada.');void iniciar();}
   function terminar(data){if(!ocupado||data.nonce!==nonceActual)return;
     ocupado=false;clearTimeout(temporizador);$('manual').disabled=false;
     const correcto=data.ok===true&&data.estado==='AUTORIZADO';
@@ -82,7 +87,8 @@
     $('resultado-nombre').textContent=data.nombre||'';$('resultado-dni').textContent=data.dni?'DNI: '+data.dni:'';
     $('resultado-mensaje').textContent=data.mensaje||'Consulta con coordinación.';
     estado(correcto?'Ingreso registrado en la hoja.':'No se registró un nuevo ingreso.');
-    $('resultado').scrollIntoView({behavior:'smooth',block:'start'});
+    $('velo').hidden=false;document.body.classList.add('modal-abierto');$('siguiente').focus({preventScroll:true});
+    clearTimeout(temporizadorResultado);temporizadorResultado=setTimeout(nuevoEscaneo,60000);
   }
   window.pariscorpLectorEstado=function(data){if(data&&data.tipo==='PARISCORP_LECTOR_RESULTADO'&&!data.pendiente)terminar(data)};
   window.addEventListener('message',e=>{if(e.origin!=='https://script.google.com'&&
@@ -102,8 +108,7 @@
     $('nonce').value=nonceActual;ocupado=true;intentos=0;$('resultado').hidden=true;$('manual').disabled=true;
     estado('QR leído. Registrando el ingreso…');temporizador=setTimeout(consultar,1500);
   });
-  $('siguiente').addEventListener('click',()=>{$('resultado').hidden=true;$('token').value='';$('token-envio').value='';
-    $('archivo').value='';estado('Listo para escanear otra entrada.');window.scrollTo({top:0,behavior:'smooth'});void iniciar()});
+  $('siguiente').addEventListener('click',nuevoEscaneo);
   $('manual').addEventListener('click',()=>leido($('token').value));
   $('iniciar').onclick=iniciar;$('detener').onclick=detener;$('archivo').onchange=e=>imagen(e.target.files[0]);
 })();
