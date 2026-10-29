@@ -40,13 +40,12 @@
       <input type="hidden" name="accion" value="ingreso_lector"><input type="hidden" name="nonce" id="nonce">
       <input type="hidden" name="token" id="token-envio">
       <label for="dni">DNI físico de la persona<input id="dni" name="dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" required placeholder="8 dígitos"></label>
-      <label for="clave">Clave de operador<input id="clave" name="clave" type="password" pattern="[a-fA-F0-9]{32}" maxlength="32" autocomplete="off" required placeholder="Clave entregada por administración"></label>
       <button id="validar-boton" type="submit" style="width:100%">Validar y registrar ingreso</button>
     </form>
     <p id="estado" class="status" role="status" aria-live="polite"></p>
   </section>
   <section id="resultado" class="card" role="status" aria-live="assertive" hidden><h2 id="resultado-titulo"></h2><strong id="resultado-nombre"></strong><p id="resultado-mensaje"></p><button id="siguiente" type="button" style="margin-top:18px">Escanear siguiente entrada</button></section>
-  <p class="fine">Este lector es una pantalla pública. La hoja de invitados y la validación permanecen privadas; sin clave de operador no se registra ningún ingreso.</p>
+  <p class="fine">El lector es público. Solo un QR aprobado con el DNI correspondiente puede registrar un ingreso, y cada entrada se usa una sola vez.</p>
   <iframe name="respuestaLector" id="respuestaLector" title="Resultado de validación" hidden></iframe>
 </main>
 <script>
@@ -82,7 +81,6 @@
     $('resultado-titulo').textContent=correcto?'✓ INGRESO AUTORIZADO':data.estado==='YA_INGRESO'?'⚠ ENTRADA YA UTILIZADA':'✕ NO PERMITIR INGRESO';
     $('resultado-nombre').textContent=data.nombre||'';$('resultado-mensaje').textContent=data.mensaje||'Consulta con coordinación.';
     estado(correcto?'Ingreso registrado en la hoja.':'No se registró un nuevo ingreso.');
-    if(data.estado==='SIN_ACCESO'){$('clave').value='';sessionStorage.removeItem('pariscorp_clave_lector')}
     $('resultado').scrollIntoView({behavior:'smooth',block:'start'});
   }
   window.pariscorpLectorEstado=function(data){if(data&&data.tipo==='PARISCORP_LECTOR_RESULTADO'&&!data.pendiente)terminar(data)};
@@ -98,11 +96,10 @@
   }
   $('validar').addEventListener('submit',e=>{
     if(ocupado){e.preventDefault();return}
-    const token=$('token').value.trim().toLowerCase(),dni=$('dni').value.trim(),clave=$('clave').value.trim().toLowerCase();
-    if(!codigoValido(token)||!/^\d{8}$/.test(dni)||!/^[a-f0-9]{32}$/.test(clave)){
-      e.preventDefault();estado('Completa un QR válido, el DNI de 8 dígitos y la clave de operador.');return}
+    const token=$('token').value.trim().toLowerCase(),dni=$('dni').value.trim();
+    if(!codigoValido(token)||!/^\d{8}$/.test(dni)){
+      e.preventDefault();estado('Completa un QR válido y el DNI de 8 dígitos.');return}
     nonceActual=crypto.randomUUID().replace(/-/g,'');$('nonce').value=nonceActual;$('token-envio').value=token;
-    $('clave').value=clave;sessionStorage.setItem('pariscorp_clave_lector',clave);
     ocupado=true;intentos=0;$('resultado').hidden=true;$('validar-boton').disabled=true;
     estado('Verificando el QR y registrando el ingreso…');temporizador=setTimeout(consultar,1500);
   });
@@ -110,7 +107,6 @@
     $('archivo').value='';estado('Listo para escanear otra entrada.');if(camaraActiva&&pausado){try{lector.resume();pausado=false}catch(e){}}
     window.scrollTo({top:0,behavior:'smooth'})});
   $('iniciar').onclick=iniciar;$('detener').onclick=detener;$('archivo').onchange=e=>imagen(e.target.files[0]);
-  $('clave').value=sessionStorage.getItem('pariscorp_clave_lector')||'';
 })();
 </script>
 </body>
