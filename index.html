@@ -76,6 +76,13 @@
       <a class="direccion" href="https://maps.app.goo.gl/K1UFMFwTWDM5VVGr8" target="_blank" rel="noopener noreferrer">Ver dirección</a>
       <p class="contact">Te informaremos por correo cuando tu asistencia quede confirmada.</p>
     </section>
+    <section class="card confirmacion" id="errorRegistro" aria-label="Problema con el registro" tabindex="-1" hidden>
+      <span class="eyebrow">Pariscorp · Pucallpa</span>
+      <h2>No se completó el registro</h2>
+      <p id="mensajeError" class="helper"></p>
+      <button id="revisarDatos" type="button">Revisar mis datos</button>
+      <p class="contact">Si necesitas corregir un registro anterior, escribe a <a href="mailto:jose.maker.mkt@gmail.com">jose.maker.mkt@gmail.com</a>.</p>
+    </section>
     <div class="cargando" id="cargando" role="dialog" aria-modal="true" aria-label="Procesando registro" hidden>
       <div class="cargando-card"><span class="eyebrow">ParisCorp · Pucallpa</span>
         <h2>Estamos enviando tu solicitud</h2>
@@ -128,7 +135,12 @@ function resolverRegistro(dato) {
     cargando.hidden = true;
     boton.disabled = false;
     aviso.textContent = dato.mensaje || 'No se pudo guardar el registro. Intenta nuevamente.';
-    aviso.scrollIntoView({behavior:'smooth',block:'center'});
+    document.getElementById('formulario').hidden = true;
+    const error = document.getElementById('errorRegistro');
+    document.getElementById('mensajeError').textContent = aviso.textContent;
+    error.hidden = false;
+    window.scrollTo(0,0);
+    error.focus();
     return;
   }
   mostrarPorcentaje(100);
@@ -188,6 +200,12 @@ window.addEventListener('message', event => {
   if (origen.protocol !== 'https:' || !(host === 'script.google.com' || host === 'googleusercontent.com' || host.endsWith('.googleusercontent.com'))) return;
   const dato = event.data;
   resolverRegistro(dato);
+});
+document.getElementById('revisarDatos').addEventListener('click', () => {
+  document.getElementById('errorRegistro').hidden = true;
+  document.getElementById('formulario').hidden = false;
+  window.scrollTo(0,0);
+  document.getElementById('nombre').focus();
 });
 </script>
 </body>
