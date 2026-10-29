@@ -32,6 +32,7 @@
     <div class="actions"><button type="button" id="iniciar">Iniciar cámara</button><button type="button" id="detener" class="secondary" disabled>Detener</button></div>
     <label class="file">Leer QR desde una imagen<input id="archivo" type="file" accept="image/*"></label>
     <label for="token">Código leído o pegado manualmente<input id="token" name="token" autocapitalize="off" autocomplete="off" spellcheck="false" inputmode="text" maxlength="64" placeholder="El código aparecerá aquí"></label>
+    <p id="qr-ok" class="status" role="status" hidden>✓ QR leído. Ahora escribe el DNI y pulsa «Validar y registrar ingreso».</p>
   </section>
   <section class="card" aria-labelledby="titulo-verificar">
     <h2 id="titulo-verificar">2 · Comprobar el DNI</h2>
@@ -53,18 +54,20 @@
   'use strict';
   const ENDPOINT='https://script.google.com/macros/s/AKfycbxGN69P6DeMj7Ot5mfiUd0w26q4P2TDVvBBkPZOQUslSlakU-99EzD_Tl36jY5GzfAXuQ/exec';
   const $=id=>document.getElementById(id);
-  let lector=null,camaraActiva=false,pausado=false,ocupado=false,nonceActual='',intentos=0,temporizador=0;
+  let lector=null,camaraActiva=false,ocupado=false,nonceActual='',intentos=0,temporizador=0;
   const estado=(texto)=>{$('estado').textContent=texto};
   function codigoValido(valor){return /^[a-f0-9]{64}$/i.test(String(valor||'').trim())}
   function leido(valor){const token=String(valor||'').trim().toLowerCase();
     if(!codigoValido(token)){estado('Este QR no corresponde a una entrada válida de PARISCORP.');return}
-    $('token').value=token;estado('QR leído. Comprueba el DNI físico y pulsa «Validar y registrar ingreso».');
-    if(camaraActiva&&!pausado){try{lector.pause(true);pausado=true}catch(e){}}
+    $('token').value=token;$('qr-ok').hidden=false;
+    estado('QR leído. Falta comprobar el DNI físico y pulsar «Validar y registrar ingreso».');
+    if(camaraActiva)setTimeout(detener,0);
+    $('dni').scrollIntoView({behavior:'smooth',block:'center'});
     $('dni').focus();
   }
-  async function detener(){if(lector&&camaraActiva){try{await lector.stop()}catch(e){}camaraActiva=false;pausado=false}
+  async function detener(){if(lector&&camaraActiva){try{await lector.stop()}catch(e){}camaraActiva=false}
     $('iniciar').disabled=false;$('detener').disabled=true;}
-  async function iniciar(){if(camaraActiva){if(pausado){try{lector.resume();pausado=false;estado('Cámara lista para leer otro QR.')}catch(e){estado('Reinicia la cámara.')}}return}
+  async function iniciar(){if(camaraActiva)return;
     if(!window.Html5Qrcode){estado('No se pudo cargar el lector. Comprueba tu conexión o usa una imagen.');return}
     $('iniciar').disabled=true;estado('Solicitando acceso a la cámara…');
     try{lector=new Html5Qrcode('reader',{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],verbose:false});
@@ -88,8 +91,8 @@
     !/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(e.origin))return;
     if(e.source!==$('respuestaLector').contentWindow)return;
     const d=e.data;if(d&&d.tipo==='PARISCORP_LECTOR_RESULTADO')terminar(d)});
-  function consultar(){if(!ocupado)return;if(++intentos>40){ocupado=false;$('validar-boton').disabled=false;
-      estado('No se pudo confirmar la respuesta. Revisa la hoja antes de repetir la validación.');return}
+  function consultar(){if(!ocupado)return;if(++intentos>15){ocupado=false;$('validar-boton').disabled=false;
+      estado('No llegó la respuesta del servidor. Revisa la hoja antes de repetir la validación.');return}
     const s=document.createElement('script');s.src=ENDPOINT+'?accion=estado_lector&nonce='+nonceActual+'&t='+Date.now();
     s.onload=()=>s.remove();s.onerror=()=>s.remove();document.head.appendChild(s);
     temporizador=setTimeout(consultar,1500);
@@ -103,8 +106,8 @@
     ocupado=true;intentos=0;$('resultado').hidden=true;$('validar-boton').disabled=true;
     estado('Verificando el QR y registrando el ingreso…');temporizador=setTimeout(consultar,1500);
   });
-  $('siguiente').addEventListener('click',()=>{$('resultado').hidden=true;$('token').value='';$('dni').value='';
-    $('archivo').value='';estado('Listo para escanear otra entrada.');if(camaraActiva&&pausado){try{lector.resume();pausado=false}catch(e){}}
+  $('siguiente').addEventListener('click',()=>{$('resultado').hidden=true;$('token').value='';$('dni').value='';$('qr-ok').hidden=true;
+    $('archivo').value='';estado('Listo para escanear otra entrada.');
     window.scrollTo({top:0,behavior:'smooth'})});
   $('iniciar').onclick=iniciar;$('detener').onclick=detener;$('archivo').onchange=e=>imagen(e.target.files[0]);
 })();
