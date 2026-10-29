@@ -70,7 +70,7 @@
     </section>
     <section class="card confirmacion" id="confirmacion" aria-label="Confirmación de registro" tabindex="-1" hidden>
       <span class="eyebrow">Pariscorp · Pucallpa</span>
-      <h2>Solicitud de asistencia recibida</h2>
+      <h2 id="tituloConfirmacion">Solicitud de asistencia recibida</h2>
       <p id="mensajeConfirmacion" class="helper">Recibimos tu solicitud para asistir a la inauguración de la primera oficina de Pariscorp en Pucallpa. El evento es exclusivo para embajadores del Club de Diamantes 💎. Tras validar tus datos y la disponibilidad, te enviaremos tu QR individual por correo.</p>
       <div class="details"><strong>Jueves 29 de octubre de 2026 · 6:00 p. m.</strong><span>Oficinas corporativas Pariscorp</span><span>Av. Centenario con Jr. Fernando Stall 192, 3.er piso, Pucallpa</span></div>
       <a class="direccion" href="https://maps.app.goo.gl/K1UFMFwTWDM5VVGr8" target="_blank" rel="noopener noreferrer">Ver dirección</a>
@@ -128,6 +128,7 @@ function resolverRegistro(dato) {
     cargando.hidden = true;
     boton.disabled = false;
     aviso.textContent = dato.mensaje || 'No se pudo guardar el registro. Intenta nuevamente.';
+    aviso.scrollIntoView({behavior:'smooth',block:'center'});
     return;
   }
   mostrarPorcentaje(100);
@@ -169,8 +170,14 @@ formulario.addEventListener('submit', () => {
     clearTimeout(consulta);
     clearInterval(avance);
     cargando.hidden = true;
-    boton.disabled = false;
-    aviso.textContent = 'No pudimos verificar el resultado. Antes de registrarte de nuevo, revisa tu correo o contacta a la organización.';
+    document.getElementById('formulario').hidden = true;
+    document.getElementById('tituloConfirmacion').textContent = 'No pudimos verificar el resultado';
+    document.getElementById('mensajeConfirmacion').textContent = 'Tu solicitud fue enviada, pero esta pantalla no pudo confirmar si se guardó. No vuelvas a registrarte: consulta con la organización antes de intentarlo otra vez.';
+    const confirmacion = document.getElementById('confirmacion');
+    confirmacion.setAttribute('aria-label','Resultado pendiente de verificación');
+    confirmacion.hidden = false;
+    window.scrollTo(0, 0);
+    confirmacion.focus();
   }, 30000);
 });
 
@@ -178,7 +185,7 @@ window.addEventListener('message', event => {
   let origen;
   try { origen = new URL(event.origin); } catch (_) { return; }
   const host = origen.hostname;
-  if (origen.protocol !== 'https:' || !(host === 'script.google.com' || host === 'script.googleusercontent.com' || host.endsWith('.script.googleusercontent.com'))) return;
+  if (origen.protocol !== 'https:' || !(host === 'script.google.com' || host === 'googleusercontent.com' || host.endsWith('.googleusercontent.com'))) return;
   const dato = event.data;
   resolverRegistro(dato);
 });
