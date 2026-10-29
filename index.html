@@ -78,7 +78,7 @@
     </section>
     <section class="card confirmacion" id="errorRegistro" aria-label="Problema con el registro" tabindex="-1" hidden>
       <span class="eyebrow">Pariscorp · Pucallpa</span>
-      <h2>No se completó el registro</h2>
+      <h2 id="tituloError">No se completó el registro</h2>
       <p id="mensajeError" class="helper"></p>
       <button id="revisarDatos" type="button">Revisar mis datos</button>
       <p class="contact">Si necesitas corregir un registro anterior, escribe a <a href="mailto:jose.maker.mkt@gmail.com">jose.maker.mkt@gmail.com</a>.</p>
@@ -137,6 +137,8 @@ function resolverRegistro(dato) {
     aviso.textContent = dato.mensaje || 'No se pudo guardar el registro. Intenta nuevamente.';
     document.getElementById('formulario').hidden = true;
     const error = document.getElementById('errorRegistro');
+    document.getElementById('tituloError').textContent = /DNI ya está registrado/i.test(aviso.textContent)
+      ? 'DNI ya registrado' : 'No se completó el registro';
     document.getElementById('mensajeError').textContent = aviso.textContent;
     error.hidden = false;
     window.scrollTo(0,0);
